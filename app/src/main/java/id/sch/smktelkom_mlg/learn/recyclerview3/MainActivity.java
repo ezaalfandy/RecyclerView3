@@ -1,17 +1,22 @@
 package id.sch.smktelkom_mlg.learn.recyclerview3;
 
+import android.app.DownloadManager;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.media.MediaCodecList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
@@ -27,6 +32,9 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
     private static final String HOTEL = "hotel";
     private static final int REQUEST_CODE_ADD = 88;
     ArrayList<Hotel> mList= new ArrayList<>();
+    boolean isFiltered;
+    ArrayList<Integer> mListMapFilter = new ArrayList<>();
+    String mQuery;
     HotelAdapter mAdapter;
     int itemPos;
     @Override
@@ -118,18 +126,84 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView)
+                MenuItemCompat.getActionView(searchItem);
+
+        searchView.setOnQueryTextListener(
+                new SearchView.OnQueryTextListener()
+                {
+                    @Override
+                    public boolean onQueryTextSubmit(String quey)
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public  boolean onQueryTextChange(String newText)
+                    {
+                        mQuery = newText.toLowerCase();
+                        doFilter(mQuery);
+                        return  true;
+                    }
+
+                    private void doFilter(String mQuery) {
+                        if (!isFiltered)
+                        {
+                            mListAll.clear();
+                            mListAll.addAll(mList);
+                            isFiltered = true
+                        }
+
+                        mList.clear();
+                        if(query==null| mQuery.isEmpty())
+                        {
+                            mList.addAll(mListAll);
+                            isFiltered = true;
+                        }
+
+                        else
+                        {
+                            mListMapFilter.clear();
+                            for ((int i = 0; i < mListAll.size(); i++)
+                            {
+                                Hotel hotel = mListAll.get(i);
+                                if (hotel.judul.toLowerCase().contains(query) ||
+                                        hotel.deskripsi.toLowerCase().contains(quey)
+                                        hotel.lokasi.toLowerCase().contains(query))
+                                {
+                                    mList.add(hotel);
+                                    mListMapFilter.add(i);
+                                }
+                            }
+                        }
+                        mAdapter.notifyDataSetChanged();
+                    }
+                }
+        );
         return true;
+
+
+
     }
     @Override
-    protected void onActivityResult(int requestCode, resultCode, data){
+    protected void onActivityResult(int requestCode, int resultCode, data){
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == )
+        if(requestCode == REQUEST_CODE_ADD && requestCode ==  RESULT_OK)
+        {
+            Hotel hotel= (Hotel) data.getSerializableExtra(HOTEL);
+            mList.add(hotel);
+            if(isFiltered) mListAll.add(hotel);
+            doFilter(mQuery);
+        }
 
             else if (requestCode == REQUEST_CODE_EDIT && resultCode == RESULT_OK)
         {
             Hotel hotel = (Hotel) data.getSerializableExtra(HOTEL);
             mList.remove(itemPos);
+            if(isFiltered) mLlistAll.remmove(mListMapFilter,get(itemPos).intValue());
             mList.add(itemPos, hotel);
+            if (isFiltered) mListAll.add(mListMapFilter.get(itemPos), hotel);
             mAdapter.notifyDataSetChanged();
         }
 
@@ -174,6 +248,8 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
         itemPos = pos;
         final Hotel hotel = mList.get(pos);
         mList.remove(itemPos);
+        if (isFiltered) mListAll.remove(mListMapFilter.get(itemPos), intValue());
+
         mAdapter.notifyDataSetChanged();
 
         Snackbar.make(findViewById(R.id.fab),hotel.judul+"Terhapus",Snackbar.LENGTH_LONG)
@@ -183,6 +259,7 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
                     public void onClick(View v)
                     {
                         mList.add(itemPos,hotel);
+                        if (isFiltered) mListAll.add(mListMapFilter.get(itemPos), hotel )
                         mAdapter.notifyDataSetChanged();
                     }
                 })
