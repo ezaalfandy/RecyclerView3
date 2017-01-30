@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -27,8 +28,11 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
     private static final int REQUEST_CODE_ADD = 88;
     ArrayList<Hotel> mList= new ArrayList<>();
     HotelAdapter mAdapter;
+    int itemPos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerVIew);
         LinearLayoutManager layoutManager= new LinearLayoutManager (this);
@@ -38,6 +42,17 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
 
         fillData();
 
+        hotel = (HOTEL) getIntent().getSerializableExtra(MainActivity.HOTEL);
+        if (hotel!=null)
+        {
+            setTitle("Edit "+hotel.judul);
+            fillData();
+        }
+
+        else
+        {
+            setTitle("New Hotel");
+        }
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -68,6 +83,12 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
     }
 
     private void fillData() {
+
+        etJudul.setText(hotel.judul);
+        etDeskripsi.setText(hotel.deskripsi);
+        etDetail.setText(hotel.detail);
+        etLokasi.setText(hotel.lokasi);
+        urifoto = Uri.parse(hotel.foto);
         Resources resources = getResources();
         String [] arJudul = resources.getStringArray(R.array.places);
         String [] arDeskripsi = resources.getStringArray(R.array.place_desc);
@@ -103,6 +124,15 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
     protected void onActivityResult(int requestCode, resultCode, data){
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == )
+
+            else if (requestCode == REQUEST_CODE_EDIT && resultCode == RESULT_OK)
+        {
+            Hotel hotel = (Hotel) data.getSerializableExtra(HOTEL);
+            mList.remove(itemPos);
+            mList.add(itemPos, hotel);
+            mAdapter.notifyDataSetChanged();
+        }
+
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -126,5 +156,16 @@ public class MainActivity extends AppCompatActivity  implements HotelAdapter,Hot
         intent.putExtra(HOTEL,mList.get(pos));
     }
 
+
+
+
+    @Override
+    public  void  doEdit(int pos)
+    {
+        itemPos = pos;
+        Intent intent = new Intent(this, InputActivity.class);
+        intent.putExtra(Hotel, mList.get(pos));
+        startActivityForResult(intent,  99);
+    }
 }
 
